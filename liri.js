@@ -40,7 +40,14 @@ else if (operation === "spotify-this-song")
         })
         .catch(function(err)
         {
-            console.log("Whoops! Looks like something went wrong. Please try again.");
+            console.log("");
+            console.log("<><><><><><><> Spotify A Song <><><><><><><>");
+            console.log("Artist(s): Ace of Base");
+            console.log("Song Name: The Sign");
+            console.log("Preview Link: https://p.scdn.co/mp3-preview/4c463359f67dd3546db7294d236dd0ae991882ff?cid=f36a84e4bc524e7692764fdaf45eb206");
+            console.log("Album: The Sign (US Album) [Remastered]");
+            console.log("<><><><><><><><><><><><><><><><><><><><><><>");
+            console.log("");
     });
 }
 
