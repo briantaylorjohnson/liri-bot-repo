@@ -24,6 +24,10 @@ else if (operation === "spotify-this-song")
             var previewUrl = response.tracks.items[0].preview_url;
             var album = response.tracks.items[0].album.name;
 
+            if (previewUrl == null)
+            {
+                previewUrl = "No preview available at this time.";
+            }
 
             console.log("");
             console.log("<><><><><><><> Spotify A Song <><><><><><><>");
