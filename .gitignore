@@ -1,0 +1,4 @@
+# Git will ignore these files/folders and not track updates to them
+node_modules
+.DS_Store
+.env
