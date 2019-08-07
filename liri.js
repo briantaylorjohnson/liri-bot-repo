@@ -1,67 +1,204 @@
 require("dotenv").config();
+var inquirer = require("inquirer");
+const axios = require('axios');
+
 var Spotify = require('node-spotify-api');
 var util = require("util");
 
 var keys = require("./keys.js");
 var spotify = new Spotify(keys.spotify);
-var operation = process.argv[2];
-var argumentOne = process.argv[3];
+var operation;
+//var argumentOne = process.argv[3];
+var username = "";
+var task = "";
 
-if (operation === "concert-this")
+console.log("\nInitializing LIRI Bot...\n");
+
+function loginUser()
 {
-    console.log("Concert this!");
+    inquirer.prompt(
+    [
+        {
+            name: "username",
+            message: "Please enter your name:",
+            validate: function(value)
+            {
+                if(value == "")
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+    ]).then(function(response)
+    {
+        username = response.username;
+        console.log("\n\nWelcome to LIRI Bot Beta, " + response.username +"!\n");
+        
+        pickTask();
+    });
 }
 
-else if (operation === "spotify-this-song")
+function pickTask()
 {
-    console.log("Spotify this song!");
-    spotify
-        .search({ type: 'track', query: argumentOne, limit: 1 })
-        .then(function(response)
+    inquirer.prompt(
+    [
         {
-            var track = response.tracks.items[0].name;
-            var artist = response.tracks.items[0].artists[0].name;
-            var previewUrl = response.tracks.items[0].preview_url;
-            var album = response.tracks.items[0].album.name;
+            type: "list",
+            name: "task",
+            message: "What would you like to do?",
+            choices:
+            [
+                "Concert This",
+                "Spotify This Song",
+                "Movie This",
+                "Do What It Says"
+            ]
+        }
+    ]).then(function(response)
+    {
+        task = response.task;
+        console.log("\nRighty-o! Let's " + task.toLowerCase() + "!\n");
 
-            if (previewUrl == null)
+        switch(task)
+        {
+            case "Concert This":
+                concertThis();
+                break;
+
+            case "Spotify This Song":
+                spotifySong();
+                break;
+
+            case "Movie This":
+                movieThis();
+                break;
+            
+            case "Do What It Says":
+                doIt();
+                break
+        }
+    });
+}
+
+function somethingElse()
+{
+    inquirer.prompt(
+    [
+        {
+            type: "confirm",
+            name: "choice",
+            message: "Would you like to do something else?",  
+            default: true  
+        }
+    ]).then(function (response)
+    {
+        if(response.choice == true)
+        {
+            pickTask();
+        }
+
+        else{
+            console.log("\nThank you for using LIRI Bot Beta, " + username + "! Have a great day. Goodbye!\n");
+            process.exit();
+        }
+    });
+}
+
+function concertThis()
+{
+    console.log("Concert this!");
+
+    axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=Batman")
+    .then(function(response) {
+        console.log(response.data);
+    })
+    .catch(function(error)
+    {
+        console.log(error);
+    });
+
+}
+
+function spotifySong()
+{
+    var song;
+
+    inquirer.prompt(
+    [
+        {
+            name: "song",
+            message: "What song title would you like to look up on Spotify?"
+        }
+    ]).then(function(response)
+    {
+        song = response.song;
+        
+        if(song !== "")
+        {
+            spotify
+            .search({ type: 'track', query: song, limit: 1 })
+            .then(function(response)
             {
-                previewUrl = "No preview available at this time.";
-            }
+                var track = response.tracks.items[0].name;
+                var artist = response.tracks.items[0].artists[0].name;
+                var previewUrl = response.tracks.items[0].preview_url;
+                var album = response.tracks.items[0].album.name;
 
-            console.log("");
-            console.log("<><><><><><><> Spotify A Song <><><><><><><>");
-            console.log("Artist(s): " + artist);
-            console.log("Song Name: " + track);
-            console.log("Preview Link: " + previewUrl);
-            console.log("Album: " + album);
-            console.log("<><><><><><><><><><><><><><><><><><><><><><>");
-            console.log("");
-        })
-        .catch(function(err)
+                if (previewUrl == null)
+                {
+                    previewUrl = "No preview available at this time.";
+                }
+                
+                console.log("");
+                console.log("<><><><><><><> Spotify A Song <><><><><><><>");
+                console.log("Artist(s): " + artist);
+                console.log("Song Name: " + track);
+                console.log("Preview Link: " + previewUrl);
+                console.log("Album: " + album);
+                console.log("<><><><><><><><><><><><><><><><><><><><><><>");
+                console.log("");
+
+                somethingElse();
+            })
+            .catch(function(err)
+            {
+                console.log("Uh oh! Something went wrong. I promise it's not you. It's me. Try again later.");
+                somethingElse();
+            });
+        }
+        else
         {
-            console.log("");
-            console.log("<><><><><><><> Spotify A Song <><><><><><><>");
+            console.log("\n<><><><><><><> Spotify A Song <><><><><><><>");
             console.log("Artist(s): Ace of Base");
             console.log("Song Name: The Sign");
             console.log("Preview Link: https://p.scdn.co/mp3-preview/4c463359f67dd3546db7294d236dd0ae991882ff?cid=f36a84e4bc524e7692764fdaf45eb206");
             console.log("Album: The Sign (US Album) [Remastered]");
             console.log("<><><><><><><><><><><><><><><><><><><><><><>");
             console.log("");
+
+            somethingElse();
+        }
+    }); 
+}
+
+function movieThis()
+{
+    console.log("Movie this!");
+
+    axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=Batman")
+    .then(function(response) {
+        console.log(response.data);
+    })
+    .catch(function(error)
+    {
+        console.log(error);
     });
 }
 
-else if (operation === "movie-this")
-{
-    console.log("Movie this!");
-}
-
-else if (operation === "do-what-it-says")
+function doIt()
 {
     console.log("Do what it says!");
 }
 
-else
-{
-    console.log("Pleaes enter a valid command line operation.");
-}
+loginUser();
