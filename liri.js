@@ -1,6 +1,7 @@
 require("dotenv").config();
 var inquirer = require("inquirer");
 const axios = require('axios');
+var moment = require("moment");
 
 var Spotify = require('node-spotify-api');
 var util = require("util");
@@ -107,17 +108,44 @@ function somethingElse()
 
 function concertThis()
 {
-    console.log("Concert this!");
-
-    axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=Batman")
-    .then(function(response) {
-        console.log(response.data);
-    })
-    .catch(function(error)
+    inquirer.prompt(
+    [
+        {
+            name: "band",
+            message: "Which artist/band would you like to see concert info on?",
+            validate: function(value)
+            {
+                if(value == "")
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+    ]).then(function(response)
     {
-        console.log(error);
-    });
+        var band = response.band;
 
+        axios.get("https://rest.bandsintown.com/artists/" + band + "/events?app_id=codingbootcamp")
+        .then(function(response)
+        {
+            
+
+            
+            for(i = 0; i < 5; i++)
+            {
+                console.log("Venue: " + response.data[i].venue.name);
+                console.log("Location: " + response.data[i].venue.city + ", " + response.data[i].venue.region + ", " + response.data[i].venue.country);
+                console.log("Date: " + moment(response.data[i].datetime).format('MMMM DD YYYY, h:mm:ss a') + "\n");
+            }
+            somethingElse();
+        })
+        .catch(function(error)
+        {
+            console.log("Uh oh! Something went wrong. I promise it's not you. It's me. Try again later.");
+            somethingElse();
+        });
+    });
 }
 
 function spotifySong()
@@ -186,9 +214,17 @@ function movieThis()
 {
     console.log("Movie this!");
 
-    axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=Batman")
+    axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=Forrest+Gump")
     .then(function(response) {
-        console.log(response.data);
+
+        console.log("Title: " + response.data.Title);
+        console.log("Year: " + response.data.Year);
+        console.log("IMDB Rating: " + response.data.Ratings[0].Value);
+        console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
+        console.log("Country: " + response.data.Country);
+        console.log("Language: " + response.data.Language);
+        console.log("Plot: " + response.data.Plot);
+        console.log("Actors: " + response.data.Actors);
     })
     .catch(function(error)
     {
