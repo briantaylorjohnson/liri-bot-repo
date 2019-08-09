@@ -1,22 +1,25 @@
-require("dotenv").config();
-var inquirer = require("inquirer");
-const axios = require('axios');
-var moment = require("moment");
-var fs = require('fs');
+// Required packages and config files for running LIRI Bot
+require("dotenv").config(); // Holds API keys and is not tracked by Git
+var inquirer = require("inquirer"); // Inquirer for user input in terminal
+const axios = require('axios'); // Axios for HTTP GET requests
+var moment = require("moment"); // Moment for formatting date and time
+var fs = require('fs'); // FileStore for reading files
+var Spotify = require('node-spotify-api'); // Spotfy for retrieving song/track data
+var keys = require("./keys.js"); // File for mapping of API keys to Spotofy API
 
-var Spotify = require('node-spotify-api');
-var util = require("util");
-
-var keys = require("./keys.js");
+// Spotify object for retrieving Spotify API keys
 var spotify = new Spotify(keys.spotify);
 
-var username = "";
-var task = "";
+// Global variable to store the user's name
+var username;
 
+// Terminal output that indicates that LIRI Bot has started
 console.log("\nInitializing LIRI Bot...\n");
 
+// Function to capture the user's name for personalization
 function loginUser()
 {
+    // Requires the user to input his/her name
     inquirer.prompt(
     [
         {
@@ -34,14 +37,20 @@ function loginUser()
     ]).then(function(response)
     {
         username = response.username;
+        
+        // Welcomes the users with his/her name
         console.log("\n\nWelcome to LIRI Bot Beta, " + response.username +"!\n");
         
+        // Invokes the function which allows the user to pick the task he/she wishes to perform
         pickTask();
     });
 }
 
+// Function which allows the user to pick the task he/she wishes to perform
 function pickTask()
 {
+    var task;
+    
     inquirer.prompt(
     [
         {
@@ -61,20 +70,25 @@ function pickTask()
         task = response.task;
         console.log("\nRighty-o! Let's " + task.toLowerCase() + "!\n");
 
+        // Switch that invokes the function associated with the task the user wishes to perform
         switch(task)
         {
+            // Invokes concertThis function
             case "Concert This":
                 concertThis();
                 break;
 
+            // Invokes spotifySong function
             case "Spotify This Song":
                 spotifySong();
                 break;
 
+            // Invokes movieThis function
             case "Movie This":
                 movieThis();
                 break;
-            
+
+            // Invokes doIt function            
             case "Do What It Says":
                 doIt();
                 break
@@ -82,9 +96,9 @@ function pickTask()
     });
 }
 
+// Function which prompts the user to indicate if he/she wants to complete another task
 function somethingElse(text)
 {
-    
     inquirer.prompt(
     [
         {
@@ -95,11 +109,13 @@ function somethingElse(text)
         }
     ]).then(function (response)
     {
+        // Invokes the pickTask function if the user wishes to perform another task
         if(response.choice == true)
         {
             pickTask();
         }
 
+        // Exits the code if the user is done using LIRI Bot
         else{
             console.log("\nThank you for using LIRI Bot Beta, " + username + "! Have a great day. Goodbye!\n");
             process.exit();
@@ -107,8 +123,12 @@ function somethingElse(text)
     });
 }
 
+// Function which looks up concert info for a band/artist the user inputs using the Bands In Town API
 function concertThis(value)
 {
+    // Switch that checks to see if an argument was passed when the function was invoked
+    // If no argument is entered (undefined), then user is prompted to enter an artist/band
+    // IF an argument is entered, then the user is not prompted to enter an artist/band
     switch(value)
     {
         case undefined:
@@ -130,23 +150,25 @@ function concertThis(value)
                 {
                     var band = response.band;
             
+                    // Invokes the Bands In Town API using Axios to retrieve concert information
                     axios.get("https://rest.bandsintown.com/artists/" + band + "/events?app_id=codingbootcamp")
                     .then(function(response)
                     {
                         
             
                         
-                        for(i = 0; i < 5; i++)
+                        for(i = 0; i < 10; i++)
                         {
-                            console.log("Venue: " + response.data[i].venue.name);
+                            console.log("<><><><><><><> Concert " + (i+1) + " <><><><><><><>\nVenue: " + response.data[i].venue.name);
                             console.log("Location: " + response.data[i].venue.city + ", " + response.data[i].venue.region + ", " + response.data[i].venue.country);
-                            console.log("Date: " + moment(response.data[i].datetime).format('MMMM DD YYYY, h:mm:ss a') + "\n");
+                            console.log("Date: " + moment(response.data[i].datetime).format('MMMM DD YYYY, h:mm:ss a') + "\n<><><><><><><><><><><><><><><><><><><><>\n");
                         }
                         somethingElse();
                     })
+                    // Catches errors if the HTTP request fails or no results are returned from the Band In Town API response
                     .catch(function(error)
                     {
-                        console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the artist/band you entered. Please try.");
+                        console.log("\nUh oh! Something went wrong. I promise it's not you. It's me. I may not have found the artist/band you entered. Please try again.\n");
                         somethingElse();
                     });
                 });
@@ -155,30 +177,36 @@ function concertThis(value)
         default:
                 var band = value;
             
+                // Invokes the Bands In Town API using Axios to retrieve concert information
                 axios.get("https://rest.bandsintown.com/artists/" + band + "/events?app_id=codingbootcamp")
                 .then(function(response)
                 {
                     for(i = 0; i < 5; i++)
                     {
-                        console.log("Venue: " + response.data[i].venue.name);
+                        console.log("<><><><><><><> Concert " + (i+1) + " <><><><><><><>\nVenue: " + response.data[i].venue.name);
                         console.log("Location: " + response.data[i].venue.city + ", " + response.data[i].venue.region + ", " + response.data[i].venue.country);
-                        console.log("Date: " + moment(response.data[i].datetime).format('MMMM DD YYYY, h:mm:ss a') + "\n");
+                        console.log("Date: " + moment(response.data[i].datetime).format('MMMM DD YYYY, h:mm:ss a') + "\n<><><><><><><><><><><><><><><><><><><><>\n");
                     }
                     somethingElse();
                 })
+                // Catches errors if the HTTP request fails or no results are returned from the Band In Town API response
                 .catch(function(error)
                 {
-                    console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the artist/band you entered. Please try.");
+                    console.log("\nUh oh! Something went wrong. I promise it's not you. It's me. I may not have found the artist/band you entered. Please try again.\n");
                     somethingElse();
                 });
             break;
     }
 }
 
+// Function which looks up info for a song/track the user inputs using the Spotify API
 function spotifySong(value)
 {
     var song;
 
+    // Switch that checks to see if an argument was passed when the function was invoked
+    // If no argument is entered (undefined), then user is prompted to enter an artist/band
+    // IF an argument is entered, then the user is not prompted to enter an artist/band
     switch(value)
     {
         case undefined:
@@ -192,8 +220,12 @@ function spotifySong(value)
             {
                 song = response.song;
                 
-                if(song !== "")
+                // Conditional to check if the user entered no artist/band
+                if(song === "")
                 {
+                    song = "I Saw the Sign Ace of Base";
+                }
+                    // Invokes the Spotify API using Axios to retrieve song/track information
                     spotify
                     .search({ type: 'track', query: song, limit: 1 })
                     .then(function(response)
@@ -208,43 +240,30 @@ function spotifySong(value)
                             previewUrl = "No preview available at this time.";
                         }
                         
-                        console.log("");
-                        console.log("<><><><><><><> Spotify A Song <><><><><><><>");
-                        console.log("Artist(s): " + artist);
+                        console.log("<><><><><><><> Spotify A Song <><><><><><><>\nArtist(s): " + artist);
                         console.log("Song Name: " + track);
                         console.log("Preview Link: " + previewUrl);
-                        console.log("Album: " + album);
-                        console.log("<><><><><><><><><><><><><><><><><><><><><><>");
-                        console.log("");
-        
+                        console.log("Album: " + album + "\n<><><><><><><><><><><><><><><><><><><><><><>\n");
                         somethingElse();
                     })
+                    // Catches errors if the HTTP request fails or no results are returned from the Spotify API response
                     .catch(function(err)
                     {
-                        console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the song you are looking for. Please, try again.");
+                        console.log("\nUh oh! Something went wrong. I promise it's not you. It's me. I may not have found the song you are looking for. Please, try again\n");
                         somethingElse();
                     });
-                }
-                else
-                {
-                    console.log("\n<><><><><><><> Spotify A Song <><><><><><><>");
-                    console.log("Artist(s): Ace of Base");
-                    console.log("Song Name: The Sign");
-                    console.log("Preview Link: https://p.scdn.co/mp3-preview/4c463359f67dd3546db7294d236dd0ae991882ff?cid=f36a84e4bc524e7692764fdaf45eb206");
-                    console.log("Album: The Sign (US Album) [Remastered]");
-                    console.log("<><><><><><><><><><><><><><><><><><><><><><>");
-                    console.log("");
-        
-                    somethingElse();
-                }
-            });
+                });
             break
         
         default:
                 song = value;
                 
-                if(song !== "")
+                // Conditional to check if the user entered no artist/band; if not artist/band is entered, the Ace of Base's "I Saw the Sign" is invoked
+                if(song === "")
                 {
+                    song = "I Saw the Sign Ace of Base"
+                }
+                    // Invokes the Spotify API using Axios to retrieve song/track information
                     spotify
                     .search({ type: 'track', query: song, limit: 1 })
                     .then(function(response)
@@ -259,42 +278,31 @@ function spotifySong(value)
                             previewUrl = "No preview available at this time.";
                         }
                         
-                        console.log("");
-                        console.log("<><><><><><><> Spotify A Song <><><><><><><>");
-                        console.log("Artist(s): " + artist);
+                        console.log("\n<><><><><><><> Spotify A Song <><><><><><><>\nArtist(s): " + artist);
                         console.log("Song Name: " + track);
                         console.log("Preview Link: " + previewUrl);
-                        console.log("Album: " + album);
-                        console.log("<><><><><><><><><><><><><><><><><><><><><><>");
-                        console.log("");
+                        console.log("Album: " + album + "\n<><><><><><><><><><><><><><><><><><><><><><>\n");
         
                         somethingElse();
                     })
+                    // Catches errors if the HTTP request fails or no results are returned from the Spotify API response
                     .catch(function(err)
                     {
-                        console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the song you are looking for. Please, try again.");
+                        console.log("\nUh oh! Something went wrong. I promise it's not you. It's me. I may not have found the song you are looking for. Please, try again.\n");
                         somethingElse();
                     });
-                }
-                else
-                {
-                    console.log("\n<><><><><><><> Spotify A Song <><><><><><><>");
-                    console.log("Artist(s): Ace of Base");
-                    console.log("Song Name: The Sign");
-                    console.log("Preview Link: https://p.scdn.co/mp3-preview/4c463359f67dd3546db7294d236dd0ae991882ff?cid=f36a84e4bc524e7692764fdaf45eb206");
-                    console.log("Album: The Sign (US Album) [Remastered]");
-                    console.log("<><><><><><><><><><><><><><><><><><><><><><>");
-                    console.log("");
-        
-                    somethingElse();
-                }
             break;
     }
     
 }
 
+// Function which looks up info for a movie entered by the user
 function movieThis(value)
 {
+    
+    // Switch that checks to see if an argument was passed when the function was invoked
+    // If no argument is entered (undefined), then user is prompted to enter an artist/band
+    // IF an argument is entered, then the user is not prompted to enter an artist/band
     switch(value)
     {
         case undefined:
@@ -303,42 +311,43 @@ function movieThis(value)
                         {
                             name: "movie",
                             message: "Which movie would you like to see info on?",
-                            validate: function(value)
-                            {
-                                if(value == "")
-                                {
-                                    return false;
-                                }
-                                    return true;
-                                }
                         }
                         ]).then(function(response)
-                        {
+                        {   
                             var movie = response.movie;
+
+                            // Conditional which checks to see if the user entered a movie; if not, searches for Mr. Nobody
+                            if(movie === "")
+                            {
+                                movie = "Mr. Nobody";
+                            }
                 
-                            axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=" + movie)
-                            .then(function(response) {
-                            console.log("Title: " + response.data.Title);
-                            console.log("Year: " + response.data.Year);
-                            console.log("IMDB Rating: " + response.data.Ratings[0].Value);
-                            console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
-                            console.log("Country: " + response.data.Country);
-                            console.log("Language: " + response.data.Language);
-                            console.log("Plot: " + response.data.Plot);
-                            console.log("Actors: " + response.data.Actors + "\n");
-                            somethingElse();
-                        })
-                        .catch(function(error)
-                        {
-                            console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the movie you are looking for. Please, try again.");
-                            somethingElse();
-                        });
+                                // Invokes the OMDB API using Axios to retrieve movie information
+                                axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=" + movie)
+                                .then(function(response) {
+                                console.log("Title: " + response.data.Title);
+                                console.log("Year: " + response.data.Year);
+                                console.log("IMDB Rating: " + response.data.Ratings[0].Value);
+                                console.log("Rotten Tomatoes Rating: " + response.data.Ratings[1].Value);
+                                console.log("Country: " + response.data.Country);
+                                console.log("Language: " + response.data.Language);
+                                console.log("Plot: " + response.data.Plot);
+                                console.log("Actors: " + response.data.Actors + "\n");
+                                somethingElse();
+                                })
+                                // Catches errors if the HTTP request fails or no results are returned from the OMDB API response
+                                .catch(function(error)
+                                {
+                                    console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the movie you are looking for. Please, try again. \n");
+                                    somethingElse();
+                                });
                         });
             break
 
         default:
                 var movie = value;
                 
+                // Invokes the OMBD API using Axios to retrieve movie information
                 axios.get("http://www.omdbapi.com/?apikey=1a62d00c&t=" + movie)
                 .then(function(response) {
                 console.log("Title: " + response.data.Title);
@@ -351,25 +360,37 @@ function movieThis(value)
                 console.log("Actors: " + response.data.Actors + "\n");
                 somethingElse();
             })
+            // Catches errors if the HTTP request fails or no results are returned from the OMDB API response
             .catch(function(error)
             {
-                console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the movie you are looking for. Please, try again.");
+                console.log("Uh oh! Something went wrong. I promise it's not you. It's me. I may not have found the movie you are looking for. Please, try again.\n");
                 somethingElse();
             });
     }
 }
 
+// Function which reads a text file and invokes the correct function above using data in the file
 function doIt()
 {
+    // Local variables to parse the file
     var text = [];
     var command = "";
     var query = "";
     
+    // Uses FileStore readFile function to read the random.txt file
     fs.readFile('random.txt', 'utf8', function(err, contents) {
+        
+        // Populates an array by splitting the text in the file
         text = contents.split(",");
-        command = text[0].substring(0, text[0].length);
+
+        // Sets the command variable to the first item in the array
+        command = text[0];
+
+        // Sets the query variable to the second item in the array and removes quotation marks around the query parameter in the text file
         query = text[1].substring(1, (text[1].length - 1));
 
+        // Switch which invokes the correct task function based upon the text in the file
+        // Uses the query variable to perform the function without user input since it is coming from the text file
         switch(command)
         {
             case "concert-this":
@@ -387,4 +408,5 @@ function doIt()
     });
 }
 
+// Kicks off the LIRI Bot command line program
 loginUser();
