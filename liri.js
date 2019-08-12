@@ -112,6 +112,7 @@ function somethingElse(text)
         // Invokes the pickTask function if the user wishes to perform another task
         if(response.choice == true)
         {
+            console.log("\n");
             pickTask();
         }
 
